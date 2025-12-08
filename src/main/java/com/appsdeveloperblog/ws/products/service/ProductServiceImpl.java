@@ -29,7 +29,7 @@ public class ProductServiceImpl implements ProductService {
 
   @SuppressWarnings("null")
   @Override
-  public String createProduct(CreatedProductRestModel productRestModel){
+  public String createProduct(CreatedProductRestModel productRestModel) throws Exception {
 
     String productId = UUID.randomUUID().toString();
 
@@ -45,8 +45,8 @@ public class ProductServiceImpl implements ProductService {
      ***************** This code is to work synchronous ***********************
      */
 
-    //  SendResult<String, ProductCreatedEvent> result =
-    //     kafkaTemplate.send(createProductTopicName, productId, productCreatedEvent).get();
+     SendResult<String, ProductCreatedEvent> result =
+        kafkaTemplate.send(createProductTopicName, productId, productCreatedEvent).get();
 
 
 
@@ -54,18 +54,18 @@ public class ProductServiceImpl implements ProductService {
       ***************** This code is to work asynchronous ***********************
     */
 
-    CompletableFuture<SendResult<String, ProductCreatedEvent>> future =
-        kafkaTemplate.send(createProductTopicName, productId, productCreatedEvent);
+    // CompletableFuture<SendResult<String, ProductCreatedEvent>> future =
+    //     kafkaTemplate.send(createProductTopicName, productId, productCreatedEvent);
 
-    future.whenComplete((result, exception) -> {
+    // future.whenComplete((result, exception) -> {
 
-      if (exception != null) {
-        LOGGER.error("************ Failed to send message: " + exception.getMessage());
-      } else {
-        LOGGER.info("************ Message sent successfully: " + result.getRecordMetadata());
-      }
+    //   if (exception != null) {
+    //     LOGGER.error("************ Failed to send message: " + exception.getMessage());
+    //   } else {
+    //     LOGGER.info("************ Message sent successfully: " + result.getRecordMetadata());
+    //   }
 
-    });
+    // });
 
     /*
      * if I want to wait for the confirmation that is stored on Kafka Cluster (it means be

@@ -4,6 +4,6 @@ import com.appsdeveloperblog.ws.products.rest.CreatedProductRestModel;
 
 public interface ProductService {
 
-  String createProduct(CreatedProductRestModel createdProductRestModel);
+  String createProduct(CreatedProductRestModel createdProductRestModel) throws Exception;
 
 }
