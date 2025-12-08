@@ -1,8 +1,6 @@
 package com.appsdeveloperblog.ws.products.service;
 
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,22 +8,20 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 import com.appsdeveloperblog.ws.products.rest.CreatedProductRestModel;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class ProductServiceImpl implements ProductService {
 
   @Value("${create.product.topic.name}")
   private String createProductTopicName;
 
-  private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
-
   KafkaTemplate<String, ProductCreatedEvent> kafkaTemplate;
 
   public ProductServiceImpl(KafkaTemplate<String, ProductCreatedEvent> kafkaTemplate) {
     this.kafkaTemplate = kafkaTemplate;
   }
-
-
 
   @SuppressWarnings("null")
   @Override
@@ -41,42 +37,19 @@ public class ProductServiceImpl implements ProductService {
         productRestModel.getPrice(),
         productRestModel.getQuantity());
 
-    /*
-     ***************** This code is to work synchronous ***********************
-     */
+     log.info("************ Before publishing a ProductCreatedEvent");
 
      SendResult<String, ProductCreatedEvent> result =
         kafkaTemplate.send(createProductTopicName, productId, productCreatedEvent).get();
 
-
-
-    /*
-      ***************** This code is to work asynchronous ***********************
-    */
-
-    // CompletableFuture<SendResult<String, ProductCreatedEvent>> future =
-    //     kafkaTemplate.send(createProductTopicName, productId, productCreatedEvent);
-
-    // future.whenComplete((result, exception) -> {
-
-    //   if (exception != null) {
-    //     LOGGER.error("************ Failed to send message: " + exception.getMessage());
-    //   } else {
-    //     LOGGER.info("************ Message sent successfully: " + result.getRecordMetadata());
-    //   }
-
-    // });
-
-    /*
-     * if I want to wait for the confirmation that is stored on Kafka Cluster (it means be
-     * syncronous) It will block the thread until have the Kafka confirmation Althought the line
-     * below works it is not recommend due can cause a misunderstand to other developers because
-     * they can think that this code is asynchronous because there is CompletableFuture in the code
-     * above. So to to this class synchronous, we have to delete the CompletableFuture.
-     */
-    // future.join();
-
-    LOGGER.info("************ Returning product id");
+    //Metadata from Kafka broker
+    log.info("************ Partition: " + result.getRecordMetadata().partition());
+    log.info("************ Topic: " + result.getRecordMetadata().topic());
+    log.info("************ Offset: " + result.getRecordMetadata().offset());
+    log.info("************ Timestamp: " + result.getRecordMetadata().timestamp());
+    
+    //Log message
+    log.info("************ Returning product id");
 
     return productId;
   }
